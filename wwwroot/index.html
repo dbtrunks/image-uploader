@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#f5f7fb">
   <title>Przesyłanie plików</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/styles.css">
   <script src="/app.js" defer></script>
 </head>
@@ -19,19 +20,57 @@
         </span>
         <span>Prześlij pliki</span>
       </a>
-      <span class="topbar-note"><span class="status-dot"></span> Prywatne i bezpieczne przesyłanie</span>
+      <span class="topbar-note">
+        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M6.5 8V6a3.5 3.5 0 0 1 7 0v2m-8 0h9a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 14.5 16h-9A1.5 1.5 0 0 1 4 14.5v-5A1.5 1.5 0 0 1 5.5 8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 11v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Prywatne i bezpieczne przesyłanie
+      </span>
     </header>
 
     <section class="intro">
-      <p class="eyebrow">PROSTO I WYGODNIE</p>
-      <h1>Twoje pliki,<br class="mobile-break"> w dobrym miejscu.</h1>
-      <p class="intro-copy">Dodaj zdjęcia i inne pliki. Możesz przesłać wiele naraz — pokażemy Ci postęp każdego z nich.</p>
+      <div class="intro-content">
+        <p class="eyebrow">PROSTO I WYGODNIE</p>
+        <h1>Twoje pliki,<br class="mobile-break"> w dobrym miejscu.</h1>
+        <p class="intro-copy">Dodaj zdjęcia i inne pliki. Możesz przesłać wiele naraz — pokażemy Ci postęp każdego z nich.</p>
+
+      </div>
+      <div class="intro-art" aria-hidden="true">
+        <svg viewBox="0 0 320 240" fill="none">
+          <path d="M43 129c0-45 36-81 81-81 27 0 51 13 66 34 8-5 18-8 28-8 29 0 53 24 53 53s-24 53-53 53H97c-30 0-54-23-54-51Z" fill="#EEF2FF"/>
+          <circle cx="79" cy="70" r="4" fill="#A8B9F7"/>
+          <circle cx="251" cy="91" r="3" fill="#A8B9F7"/>
+          <circle cx="230" cy="174" r="4" fill="#C5D0FA"/>
+          <g transform="rotate(-9 96 119)">
+            <rect x="54" y="91" width="75" height="92" rx="12" fill="white" stroke="#E4E9F5" stroke-width="2"/>
+            <rect x="69" y="108" width="44" height="38" rx="7" fill="#F2EEFF"/>
+            <path d="M76 137 87 125l8 8 6-6 7 10H76Z" fill="#9A83E8"/>
+            <circle cx="101" cy="118" r="4" fill="#D9D0FF"/>
+            <path d="M70 157h41m-41 8h29" stroke="#D8DEEB" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <g transform="rotate(8 226 124)">
+            <rect x="190" y="84" width="76" height="97" rx="12" fill="white" stroke="#E4E9F5" stroke-width="2"/>
+            <rect x="202" y="97" width="52" height="47" rx="7" fill="#E9F5FF"/>
+            <path d="m205 137 14-16 10 10 8-8 14 14h-46Z" fill="#69B8A7"/>
+            <circle cx="239" cy="109" r="5" fill="#F5C974"/>
+            <path d="M203 157h48m-48 8h33" stroke="#D8DEEB" stroke-width="3" stroke-linecap="round"/>
+          </g>
+          <rect x="103" y="74" width="114" height="105" rx="22" fill="white" stroke="#E0E7F5" stroke-width="2"/>
+          <rect x="116" y="87" width="88" height="79" rx="15" fill="#F7F9FF"/>
+          <path d="M160 139V111m0 0-11 11m11-11 11 11" stroke="#4268E8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M143 142v4a5 5 0 0 0 5 5h24a5 5 0 0 0 5-5v-4" stroke="#8EA4F2" stroke-width="4" stroke-linecap="round"/>
+          <path d="M145 181h30" stroke="#CBD5F0" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="160" cy="54" r="7" fill="#DCE5FF"/>
+          <path d="m160 49 1.6 3.4 3.4 1.6-3.4 1.6L160 59l-1.6-3.4L155 54l3.4-1.6L160 49Z" fill="#6985EB"/>
+        </svg>
+      </div>
     </section>
 
     <section class="uploader-card" aria-label="Import plików">
       <div class="destination-picker">
         <div class="destination-copy">
-          <label for="destination-select">Miejsce zapisu</label>
+          <label class="destination-label" for="destination-select">
+            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5h4L10 6.5h5.5A1.5 1.5 0 0 1 17 8v7.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 15.5v-9Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            Miejsce zapisu
+          </label>
           <p>Wybierz katalog docelowy</p>
         </div>
         <div class="select-wrap">
@@ -53,7 +92,10 @@
         </div>
         <h2>Przeciągnij pliki tutaj</h2>
         <p>albo</p>
-        <button class="button button-outline" id="choose-files" type="button">Wybierz z urządzenia</button>
+        <button class="button button-outline" id="choose-files" type="button">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M10 13V3m0 0L6.5 6.5M10 3l3.5 3.5M4 12.5v3A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5v-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Wybierz z urządzenia
+        </button>
         <span class="drop-hint">Możesz zaznaczyć wiele plików · maks. 50 MB na plik</span>
         <input id="file-input" type="file" multiple hidden>
       </div>
@@ -91,8 +133,14 @@
     </section>
 
     <footer class="page-footer">
-      <span>Twoje pliki są zapisywane lokalnie na serwerze.</span>
-      <span>Obsługiwane formaty: obrazy i inne pliki</span>
+      <span>
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 6V4.5a3 3 0 0 1 6 0V6m-7 0h8a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Twoje pliki są zapisywane lokalnie na serwerze.
+      </span>
+      <span>
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><rect x="2" y="2" width="12" height="12" rx="2.5" stroke="currentColor" stroke-width="1.3"/><circle cx="5.5" cy="5.5" r="1.2" stroke="currentColor" stroke-width="1.2"/><path d="m3 12 3.5-3.5 2.5 2.5 1.5-1.5 2.5 2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Obsługiwane formaty: obrazy i inne pliki
+      </span>
     </footer>
     <div class="notice" id="notice" role="status" aria-live="polite"></div>
   </main>

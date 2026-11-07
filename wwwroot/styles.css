@@ -59,14 +59,20 @@ button { font: inherit; }
 
 .brand-mark svg { width: 21px; height: 21px; }
 .topbar-note { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
-.status-dot { width: 7px; height: 7px; border-radius: 50%; background: #43b383; box-shadow: 0 0 0 3px #e4f6ed; }
+.topbar-note svg { width: 16px; height: 16px; color: var(--green); }
 
-.intro { padding: 55px 0 33px; text-align: center; }
+.intro { min-height: 270px; padding: 40px 30px 35px; display: grid; grid-template-columns: minmax(0, 1fr) 280px; align-items: center; gap: 20px; }
+.intro-content { position: relative; z-index: 1; }
 .eyebrow { margin: 0 0 13px; color: var(--blue); font-size: 10px; font-weight: 700; letter-spacing: .16em; }
 h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 12px; font-family: "Segoe UI", sans-serif; font-size: clamp(32px, 5vw, 45px); font-weight: 800; letter-spacing: -.055em; line-height: 1.13; }
-.intro-copy { max-width: 490px; margin: 0 auto; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.intro-copy { max-width: 490px; margin: 0; color: var(--muted); font-size: 14px; line-height: 1.7; }
 .mobile-break { display: none; }
+.intro-art { width: 100%; max-width: 280px; justify-self: end; }
+.intro-art svg { display: block; width: 100%; height: auto; overflow: visible; }
+.file-types { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 19px; }
+.file-types span { min-height: 30px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; color: #687693; border: 1px solid #e6eaf3; border-radius: 20px; background: rgba(255,255,255,.72); font-size: 10px; font-weight: 600; }
+.file-types svg { width: 15px; height: 15px; color: var(--blue); }
 
 .uploader-card {
   overflow: hidden;
@@ -86,7 +92,8 @@ h1 { margin-bottom: 12px; font-family: "Segoe UI", sans-serif; font-size: clamp(
   border-bottom: 1px solid #f0f2f6;
 }
 
-.destination-copy label { display: block; margin-bottom: 4px; color: #28354b; font-size: 12px; font-weight: 700; }
+.destination-label { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; color: #28354b; font-size: 12px; font-weight: 700; }
+.destination-label svg { width: 15px; height: 15px; color: var(--blue); }
 .destination-copy p { margin: 0; color: var(--muted); font-size: 10px; }
 .select-wrap { position: relative; width: min(100%, 290px); }
 .select-wrap select { width: 100%; min-height: 39px; padding: 0 36px 0 12px; appearance: none; color: #34425b; border: 1px solid #e1e6ef; border-radius: 7px; background: white; font: 11px "Segoe UI", sans-serif; }
@@ -121,6 +128,7 @@ h1 { margin-bottom: 12px; font-family: "Segoe UI", sans-serif; font-size: clamp(
 .button:disabled { cursor: not-allowed; opacity: .58; }
 .button-outline { color: var(--blue); border: 1px solid #d7e0fa; background: white; box-shadow: 0 2px 4px rgba(35, 54, 100, .04); }
 .button-outline:hover { background: #f5f7ff; border-color: #b8c8f4; }
+.button-outline svg { width: 16px; height: 16px; }
 .button-primary { min-width: 205px; color: white; background: var(--blue); box-shadow: 0 5px 12px rgba(66, 104, 232, .2); }
 .button-primary:hover:not(:disabled) { background: var(--blue-dark); box-shadow: 0 7px 16px rgba(66, 104, 232, .28); transform: translateY(-1px); }
 .button-primary svg { width: 17px; height: 17px; }
@@ -162,17 +170,28 @@ h1 { margin-bottom: 12px; font-family: "Segoe UI", sans-serif; font-size: clamp(
 .queue-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-top: 18px; }
 .queue-limit { margin: 0; color: #a0a8b6; font-size: 10px; }
 .page-footer { display: flex; justify-content: space-between; gap: 15px; padding: 19px 2px 32px; color: #9aa3b1; font-size: 10px; }
+.page-footer span { display: inline-flex; align-items: center; gap: 6px; }
+.page-footer svg { width: 14px; height: 14px; flex: 0 0 14px; }
 .notice { position: fixed; right: 22px; bottom: 20px; max-width: min(380px, calc(100vw - 40px)); padding: 12px 16px; color: white; background: #29364e; border-radius: 9px; box-shadow: 0 8px 24px rgba(25, 38, 63, .18); font-size: 12px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity .2s, transform .2s; }
 .notice.visible { opacity: 1; transform: translateY(0); }
+
+@media (max-width: 760px) {
+  .intro { padding-right: 22px; padding-left: 22px; grid-template-columns: minmax(0, 1fr) 190px; }
+  .intro-art { max-width: 190px; }
+}
 
 @media (max-width: 600px) {
   .page { width: min(100% - 28px, 920px); }
   .topbar { height: 68px; }
   .topbar-note { max-width: 150px; font-size: 10px; }
-  .intro { padding: 42px 0 26px; }
+  .intro { min-height: 0; padding: 36px 6px 26px; grid-template-columns: minmax(0, 1fr) 125px; gap: 0; }
+  .intro-art { width: 145px; margin-left: -17px; }
   h1 { font-size: 34px; }
-  .mobile-break { display: initial; }
+  .mobile-break { display: none; }
   .intro-copy { max-width: 350px; font-size: 12px; }
+  .file-types { gap: 5px; margin-top: 14px; }
+  .file-types span { min-height: 27px; padding: 0 7px; font-size: 9px; }
+  .file-types svg { width: 13px; height: 13px; }
   .dropzone { min-height: 255px; margin: 13px; }
   .dropzone h2 { font-size: 15px; }
   .destination-picker { align-items: stretch; flex-direction: column; gap: 10px; padding: 15px 17px; }
@@ -183,4 +202,9 @@ h1 { margin-bottom: 12px; font-family: "Segoe UI", sans-serif; font-size: clamp(
   .queue-footer .button { width: 100%; }
   .queue-limit { text-align: center; }
   .page-footer { flex-direction: column; align-items: center; gap: 6px; font-size: 9px; }
+}
+
+@media (max-width: 390px) {
+  .intro { grid-template-columns: minmax(0, 1fr) 98px; padding-right: 0; }
+  .intro-art { width: 124px; margin-left: -26px; }
 }

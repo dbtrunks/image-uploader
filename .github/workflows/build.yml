@@ -1,0 +1,40 @@
+name: Build linux-x64
+
+on:
+  push:
+    tags: ["v*"]        # buduje po wypchnięciu tagu, np. v1.0.0
+  workflow_dispatch:    # pozwala też odpalić ręcznie z zakładki Actions
+
+permissions:
+  contents: write       # potrzebne do utworzenia Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Zależności dla Native AOT
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - name: Publish
+        run: dotnet publish ImageUploader.csproj -c Release -r linux-x64 -o out
+
+      - name: Spakuj
+        run: tar -czf ImageUploader-linux-x64.tar.gz -C out .
+
+      - name: Wgraj jako artefakt
+        uses: actions/upload-artifact@v4
+        with:
+          name: ImageUploader-linux-x64
+          path: ImageUploader-linux-x64.tar.gz
+
+      - name: Utwórz Release (tylko dla tagów)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ImageUploader-linux-x64.tar.gz

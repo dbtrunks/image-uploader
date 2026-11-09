@@ -37,59 +37,78 @@ Dodaj miejsca w sekcji `Upload:Destinations` w `appsettings.json`. Ścieżki wzg
 
 W przeglądarce pokazywane są tylko nazwy miejsc. Serwer przyjmuje wyłącznie identyfikatory skonfigurowane w `appsettings.json`; ścieżki nie są przyjmowane od użytkownika.
 
-## Publikacja AOT
+## Instalacja z GitHub Releases
 
-Publikację wykonaj na komputerze z Linux x64 i .NET 10 SDK:
+Każdy tag `v*` buduje dwa samodzielne pakiety Native AOT dla x64 i publikuje je jako pliki `.tar.gz` w [GitHub Releases](https://github.com/dbtrunks/image-uploader/releases):
+
+- `ImageUploader-linux-x64.tar.gz`
+- `ImageUploader-win-x64.tar.gz`
+
+Wybierz tag wydania, np. `v1.0.0`, aby zainstalować konkretną wersję. Pominięcie tagu w poleceniu instalatora wybiera najnowsze wydanie. Do instalacji nie jest potrzebny .NET Runtime.
+
+### Linux
+
+Wymagany jest Linux z systemd; instalator automatycznie doinstaluje Nginx przez `apt-get`, jeśli go brakuje. Pobierz instalator z repozytorium i uruchom go jako root:
 
 ```bash
-dotnet publish -c Release -r linux-x64 --self-contained true -o ./publish
+curl -fsSLo install.sh https://raw.githubusercontent.com/dbtrunks/image-uploader/main/install/install.sh
+sudo bash install.sh
 ```
 
-Opublikowane pliki skopiuj na serwer, np.:
+Aby zainstalować konkretny tag:
 
 ```bash
-scp -r ./publish user@serwer:/tmp/image-uploader-publish
-scp ./install.sh ./addHttps.sh user@serwer:/tmp/
+sudo bash install.sh v1.0.0
 ```
 
-### Instalacja na serwerze
+Instalator pobiera odpowiednie archiwum z GitHub Releases, zachowuje istniejący `appsettings.json` podczas aktualizacji i konfiguruje usługę systemd oraz Nginx. Aplikacja nasłuchuje lokalnie na `127.0.0.1:8282`, a Nginx udostępnia ją przez HTTP na porcie 8080. Dane są zapisywane w `/var/lib/image-uploader/uploads` i `/var/lib/image-uploader/images`. Otwórz TCP 8080 na zaporze serwera.
 
-Skrypty wymagają Linuxa z systemd. `install.sh` doinstaluje Nginx przez `apt-get`, jeśli nie jest zainstalowany; uruchom go jako root, podając katalog publikacji:
+#### Włączenie HTTPS na Linuxie
 
-```bash
-sudo bash install.sh /tmp/image-uploader-publish
-```
-
-Przed publikacją ustaw w `appsettings.json` ścieżki miejsc docelowych na `/var/lib/image-uploader/uploads` i `/var/lib/image-uploader/images` (lub dostosuj je do własnych katalogów). Usługa ma prawo zapisu tylko do tych katalogów.
-
-Skrypt instaluje aplikację jako usługę systemd oraz konfiguruje Nginx na HTTP pod portem 8080. Aplikacja nasłuchuje tylko na `127.0.0.1:8282`; port 8282 nie jest wystawiony na zewnątrz.
-
-### Włączenie HTTPS
-
-Po instalacji aplikacji włącz HTTPS, podając adres IP serwera:
+Po instalacji pobierz skrypt HTTPS i uruchom go, podając adres IP serwera:
 
 ```bash
+curl -fsSLo addHttps.sh https://raw.githubusercontent.com/dbtrunks/image-uploader/main/install/addHttps.sh
 sudo bash addHttps.sh 192.168.1.12
 ```
 
-Domyślnie skrypt tworzy certyfikat samopodpisany z adresem IP w SAN. Szyfruje on połączenie, ale przeglądarka wyświetli ostrzeżenie, dopóki certyfikat nie zostanie dodany do zaufanych certyfikatów na urządzeniach użytkowników.
-
-Możesz zamiast tego podać ścieżki do własnego certyfikatu (z adresem IP w SAN) i klucza prywatnego:
+Domyślnie skrypt tworzy certyfikat samopodpisany z adresem IP w SAN. Przeglądarka będzie wyświetlała ostrzeżenie, dopóki certyfikat nie zostanie dodany do zaufanych certyfikatów klientów. Możesz podać własny certyfikat i klucz:
 
 ```bash
 sudo bash addHttps.sh 192.168.1.12 /ścieżka/do/certyfikatu.crt /ścieżka/do/klucza.key
 ```
 
-Skrypt sprawdza adres IP w certyfikacie oraz zgodność klucza, a następnie przełącza konfigurację Nginx z HTTP na HTTPS. Nginx udostępnia aplikację pod `https://192.168.1.12:8080`. Otwórz port TCP 8080 na zaporze serwera.
+Po włączeniu HTTPS Nginx obsługuje aplikację pod `https://192.168.1.12:8080`. Skrypt sprawdza adres IP w certyfikacie i zgodność klucza.
 
-Usługa aplikacji i logi:
+Status usługi i logi:
 
 ```bash
-curl -I http://127.0.0.1:8282/
-curl -I --cacert /etc/nginx/tls/image-uploader.crt https://192.168.1.12:8080/
 sudo systemctl status image-uploader.service
 sudo systemctl status nginx
 sudo journalctl -u image-uploader.service -n 100 --no-pager
 ```
 
-Konfiguracja Nginx i certyfikat trafiają odpowiednio do `/etc/nginx/` i `/etc/nginx/tls/`. Plik certyfikatu jest publiczny, a klucz prywatny ma uprawnienia `0600` i należy do `root`.
+### Windows
+
+Wymagany jest Windows x64 z PowerShell 5.1 lub nowszym oraz wbudowanym `tar.exe`. Otwórz PowerShell jako administrator, pobierz instalator i uruchom go z pominięciem blokady skryptów pobranych z Internetu:
+
+```powershell
+Invoke-WebRequest https://raw.githubusercontent.com/dbtrunks/image-uploader/main/install/install.ps1 -OutFile install.ps1
+powershell.exe -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+Aby zainstalować konkretny tag:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\install.ps1 -Version v1.0.0
+```
+
+Instalator pobiera pakiet z GitHub Releases, zachowuje istniejący `appsettings.json` podczas aktualizacji, konfiguruje zadanie uruchamiane przy starcie systemu i dodaje regułę zapory dla TCP 8282 w profilach domenowym/prywatnym. Aplikacja jest dostępna pod `http://<IP-komputera>:8282/`. Dane i logi znajdują się w `%ProgramData%\ImageUploader`. Ogranicz dostęp do zaufanej sieci; ten wariant nie konfiguruje HTTPS.
+
+Aby sprawdzić lub zatrzymać zadanie:
+
+```powershell
+Get-ScheduledTask -TaskName ImageUploader
+Stop-ScheduledTask -TaskName ImageUploader
+Start-ScheduledTask -TaskName ImageUploader
+```

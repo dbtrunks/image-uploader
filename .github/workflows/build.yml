@@ -1,40 +1,61 @@
-name: Build linux-x64
+name: Build release
 
 on:
   push:
-    tags: ["v*"]        # buduje po wypchnięciu tagu, np. v1.0.0
-  workflow_dispatch:    # pozwala też odpalić ręcznie z zakładki Actions
+    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
-  contents: write       # potrzebne do utworzenia Release
+  contents: write
 
 jobs:
-  build:
+  build-linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 10.0.x
-
       - name: Zależności dla Native AOT
         run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
-
       - name: Publish
         run: dotnet publish ImageUploader.csproj -c Release -r linux-x64 -o out
-
       - name: Spakuj
         run: tar -czf ImageUploader-linux-x64.tar.gz -C out .
-
-      - name: Wgraj jako artefakt
+      - name: Wgraj artefakt
         uses: actions/upload-artifact@v4
         with:
           name: ImageUploader-linux-x64
           path: ImageUploader-linux-x64.tar.gz
 
-      - name: Utwórz Release (tylko dla tagów)
-        if: startsWith(github.ref, 'refs/tags/')
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Publish
+        run: dotnet publish ImageUploader.csproj -c Release -r win-x64 -o out
+      - name: Spakuj
+        run: tar.exe -czf ImageUploader-win-x64.tar.gz -C out .
+      - name: Wgraj artefakt
+        uses: actions/upload-artifact@v4
+        with:
+          name: ImageUploader-win-x64
+          path: ImageUploader-win-x64.tar.gz
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: ImageUploader-*
+          merge-multiple: true
+      - name: Utwórz GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: ImageUploader-linux-x64.tar.gz
+          files: artifacts/*.tar.gz

@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-PUBLISH_DIR="${1:-/tmp/image-uploader-publish}"
+RELEASE_TAG="${1:-latest}"
+REPOSITORY="dbtrunks/image-uploader"
+ASSET_NAME="ImageUploader-linux-x64.tar.gz"
 APP_DIR="/opt/image-uploader"
 DATA_DIR="/var/lib/image-uploader"
 SERVICE_USER="image-uploader"
@@ -10,17 +12,45 @@ SERVICE_FILE="/etc/systemd/system/image-uploader.service"
 NGINX_NAME="image-uploader"
 
 if [[ "$(id -u)" -ne 0 ]]; then
-  echo "Uruchom skrypt jako root: sudo bash $0 [katalog-publish]." >&2
+  echo "Uruchom skrypt jako root: sudo bash $0 [tag-wydania]." >&2
   exit 1
 fi
 
-if [[ ! -x "$PUBLISH_DIR/ImageUploader" ]]; then
-  echo "Nie znaleziono wykonywalnego pliku $PUBLISH_DIR/ImageUploader. Najpierw opublikuj aplikację dla linux-x64." >&2
+if [[ "$RELEASE_TAG" != "latest" && ! "$RELEASE_TAG" =~ ^v[0-9A-Za-z][0-9A-Za-z._-]*$ ]]; then
+  echo "Nieprawidłowy tag wydania: $RELEASE_TAG (oczekiwano np. v1.2.3 lub latest)." >&2
   exit 1
 fi
 
-if [[ ! -f "$PUBLISH_DIR/appsettings.json" || ! -d "$PUBLISH_DIR/wwwroot" ]]; then
-  echo "Katalog publikacji musi zawierać appsettings.json oraz wwwroot." >&2
+for command_name in curl tar; do
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    echo "Brak wymaganego polecenia: $command_name." >&2
+    exit 1
+  fi
+done
+
+if [[ "$RELEASE_TAG" == "latest" ]]; then
+  DOWNLOAD_URL="https://github.com/$REPOSITORY/releases/latest/download/$ASSET_NAME"
+else
+  DOWNLOAD_URL="https://github.com/$REPOSITORY/releases/download/$RELEASE_TAG/$ASSET_NAME"
+fi
+
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+PUBLISH_DIR="$TMP_DIR/publish"
+mkdir -p "$PUBLISH_DIR"
+
+if ! curl --fail --location --silent --show-error "$DOWNLOAD_URL" -o "$TMP_DIR/$ASSET_NAME"; then
+  echo "Nie udało się pobrać $ASSET_NAME dla wydania $RELEASE_TAG." >&2
+  exit 1
+fi
+
+if ! tar -xzf "$TMP_DIR/$ASSET_NAME" -C "$PUBLISH_DIR"; then
+  echo "Nie udało się rozpakować archiwum $ASSET_NAME." >&2
+  exit 1
+fi
+
+if [[ ! -x "$PUBLISH_DIR/ImageUploader" || ! -f "$PUBLISH_DIR/appsettings.json" || ! -d "$PUBLISH_DIR/wwwroot" ]]; then
+  echo "Archiwum wydania nie zawiera wymaganych plików aplikacji dla linux-x64." >&2
   exit 1
 fi
 
@@ -74,6 +104,10 @@ fi
 install -d -o root -g root -m 0755 "$APP_DIR"
 install -d -o "$SERVICE_USER" -g "$SERVICE_GROUP" -m 0750 \
   "$DATA_DIR/uploads" "$DATA_DIR/images"
+
+if [[ -f "$APP_DIR/appsettings.json" ]]; then
+  cp "$APP_DIR/appsettings.json" "$PUBLISH_DIR/appsettings.json"
+fi
 
 cp -a "$PUBLISH_DIR"/. "$APP_DIR"/
 chown -R root:root "$APP_DIR"

@@ -159,6 +159,19 @@ function renderQueue() {
       item.status === "error" ? "Błąd" : "Oczekuje";
     if (item.error) status.title = item.error;
 
+    if (item.status === "error") {
+      const retry = document.createElement("button");
+      retry.className = "text-button retry-file";
+      retry.type = "button";
+      retry.textContent = "Ponów";
+      retry.setAttribute("aria-label", `Ponów wysyłanie pliku ${item.file.name}`);
+      retry.disabled = isUploading;
+      retry.addEventListener("click", () => retryFile(item));
+      row.append(preview, info, progress, status, retry);
+    } else {
+      row.append(preview, info, progress, status);
+    }
+
     const remove = document.createElement("button");
     remove.className = "remove-file";
     remove.type = "button";
@@ -171,7 +184,7 @@ function renderQueue() {
       renderQueue();
     });
 
-    row.append(preview, info, progress, status, remove);
+    row.append(remove);
     fileList.append(row);
   }
 
@@ -209,34 +222,50 @@ async function uploadPendingFiles() {
 
   for (const item of files) {
     if (item.status === "done") continue;
-    item.status = "uploading";
-    item.progress = 0;
-    item.error = "";
-    renderQueue();
-
-    try {
-      await uploadFile(item, percent => {
-        item.progress = percent;
-        updateProgress();
-        const row = fileList.children[files.indexOf(item)];
-        if (row) {
-          row.querySelector(".item-progress-fill").style.width = `${percent}%`;
-          row.querySelector(".file-status").textContent = `${Math.round(percent)}%`;
-        }
-      });
-      item.status = "done";
-      item.progress = 100;
-    } catch (error) {
-      item.status = "error";
-      item.error = error.message || "Nie udało się wysłać pliku.";
-    }
-    renderQueue();
+    await uploadItem(item);
   }
 
   isUploading = false;
   renderQueue();
   const failed = files.filter(item => item.status === "error").length;
   showNotice(failed ? `Wysłano pliki. Nie udało się przesłać ${failed}; możesz ponowić próbę.` : "Wszystkie pliki zostały przesłane.");
+}
+
+async function retryFile(item) {
+  if (isUploading || item.status !== "error") return;
+  isUploading = true;
+  renderQueue();
+  await uploadItem(item);
+  isUploading = false;
+  renderQueue();
+  showNotice(item.status === "done"
+    ? `Plik ${item.file.name} został przesłany.`
+    : `Nie udało się ponownie przesłać pliku ${item.file.name}.`);
+}
+
+async function uploadItem(item) {
+  item.status = "uploading";
+  item.progress = 0;
+  item.error = "";
+  renderQueue();
+
+  try {
+    await uploadFile(item, percent => {
+      item.progress = percent;
+      updateProgress();
+      const row = fileList.children[files.indexOf(item)];
+      if (row) {
+        row.querySelector(".item-progress-fill").style.width = `${percent}%`;
+        row.querySelector(".file-status").textContent = `${Math.round(percent)}%`;
+      }
+    });
+    item.status = "done";
+    item.progress = 100;
+  } catch (error) {
+    item.status = "error";
+    item.error = error.message || "Nie udało się wysłać pliku.";
+  }
+  renderQueue();
 }
 
 function uploadFile(item, onProgress) {

@@ -163,6 +163,8 @@ h1 { margin-bottom: 12px; font-family: "Segoe UI", sans-serif; font-size: clamp(
 .file-status { min-width: 65px; color: #8994a6; font-size: 10px; text-align: right; }
 .file-status.done { color: var(--green); }
 .file-status.error { color: var(--red); }
+.retry-file { flex: 0 0 auto; color: var(--blue); }
+.retry-file:disabled { visibility: hidden; }
 .remove-file { width: 28px; height: 28px; display: grid; flex: 0 0 28px; place-items: center; color: #a0a9b7; border: 0; border-radius: 6px; background: transparent; cursor: pointer; font-size: 17px; }
 .remove-file:hover { color: var(--red); background: #fff1f1; }
 .remove-file:disabled { visibility: hidden; }

@@ -79,15 +79,38 @@ app.MapPost("/api/upload", async (HttpRequest request, CancellationToken cancell
         return Results.Text("Maksymalny rozmiar pliku to 50 MB.", statusCode: StatusCodes.Status400BadRequest);
     }
 
-    var extension = Path.GetExtension(file.FileName);
-    if (extension.Length is < 2 or > 12 || !extension[1..].All(char.IsAsciiLetterOrDigit))
+    var fileName = Path.GetFileName(file.FileName.Replace('\\', '/'));
+    if (string.IsNullOrWhiteSpace(fileName)
+        || fileName is "." or ".."
+        || fileName.Any(character =>
+            char.IsControl(character) || character is '<' or '>' or ':' or '"' or '|' or '?' or '*'))
     {
-        extension = ".bin";
+        return Results.Text("Nieprawidłowa nazwa pliku.", statusCode: StatusCodes.Status400BadRequest);
     }
 
-    var filePath = Path.Combine(destination.Path, $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}");
-    await using var output = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-    await file.CopyToAsync(output, cancellationToken);
+    var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+    var extension = Path.GetExtension(fileName);
+    FileStream output;
+    for (var suffix = 0; ; suffix++)
+    {
+        var candidateFileName = suffix == 0
+            ? fileName
+            : $"{fileNameWithoutExtension}_{suffix}{extension}";
+        var filePath = Path.Combine(destination.Path, candidateFileName);
+        try
+        {
+            output = new FileStream(filePath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            break;
+        }
+        catch (IOException) when (File.Exists(filePath))
+        {
+        }
+    }
+
+    await using (output)
+    {
+        await file.CopyToAsync(output, cancellationToken);
+    }
 
     return Results.Text("Plik został zapisany.");
 });

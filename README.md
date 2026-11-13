@@ -12,6 +12,8 @@ dotnet run
 
 Otwórz adres wyświetlony przez aplikację. Użytkownik wybiera miejsce docelowe z listy skonfigurowanej przez administratora. Domyślna konfiguracja zapisuje pliki w katalogu `uploads` obok pliku projektu. Limit wynosi 50 MB na plik i 100 plików w kolejce.
 
+Pliki są zapisywane pod oryginalnymi nazwami. Jeśli plik o danej nazwie już istnieje, aplikacja dopisuje numer przed rozszerzeniem, np. `domek_1.png`.
+
 ## Konfiguracja miejsc docelowych
 
 Dodaj miejsca w sekcji `Upload:Destinations` w `appsettings.json`. Ścieżki względne są liczone od katalogu aplikacji; możesz też podać ścieżkę bezwzględną. Aplikacja tworzy skonfigurowane katalogi przy uruchomieniu, więc konto systemowe uruchamiające aplikację musi mieć do nich prawo zapisu.

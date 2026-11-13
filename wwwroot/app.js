@@ -14,12 +14,13 @@ const clearQueueButton = document.querySelector("#clear-queue");
 const notice = document.querySelector("#notice");
 const destinationSelect = document.querySelector("#destination-select");
 
-chooseFilesButton.addEventListener("click", () => fileInput.click());
+chooseFilesButton.addEventListener("click", openFilePicker);
 destinationSelect.addEventListener("change", renderQueue);
 dropzone.addEventListener("click", event => {
-  if (!event.target.closest("button")) fileInput.click();
+  if (!event.target.closest("button")) openFilePicker();
 });
 fileInput.addEventListener("change", () => {
+  clearUploadedFiles();
   addFiles(fileInput.files);
   fileInput.value = "";
 });
@@ -46,6 +47,22 @@ clearQueueButton.addEventListener("click", () => {
 });
 
 loadDestinations();
+
+function openFilePicker() {
+  if (isUploading) return;
+  clearUploadedFiles();
+  fileInput.click();
+}
+
+function clearUploadedFiles() {
+  const uploadedFiles = files.filter(item => item.status === "done").length;
+  if (uploadedFiles > 0) {
+    for (let index = files.length - 1; index >= 0; index--) {
+      if (files[index].status === "done") files.splice(index, 1);
+    }
+    renderQueue();
+  }
+}
 
 async function loadDestinations() {
   try {

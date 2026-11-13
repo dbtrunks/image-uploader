@@ -6,6 +6,10 @@ const long maxRequestSize = maxFileSize + 1024 * 1024;
 
 var builder = WebApplication.CreateBuilder(args);
 
+#if WINDOWS_SERVICE
+builder.Host.UseWindowsService();
+#endif
+
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = maxRequestSize;

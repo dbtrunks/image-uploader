@@ -105,12 +105,14 @@ Aby zainstalować konkretny tag:
 powershell.exe -ExecutionPolicy Bypass -File .\install.ps1 -Version v1.0.0
 ```
 
-Instalator pobiera pakiet z GitHub Releases, zachowuje istniejący `appsettings.json` podczas aktualizacji, konfiguruje zadanie uruchamiane przy starcie systemu i dodaje regułę zapory dla TCP 8282 w profilach domenowym/prywatnym. Aplikacja jest dostępna pod `http://<IP-komputera>:8282/`. Dane i logi znajdują się w `%ProgramData%\ImageUploader`. Ogranicz dostęp do zaufanej sieci; ten wariant nie konfiguruje HTTPS.
+Instalator pobiera pakiet z GitHub Releases, zachowuje istniejący `appsettings.json` podczas aktualizacji, rejestruje automatycznie uruchamianą usługę Windows `ImageUploader` i dodaje regułę zapory dla TCP 8282 w profilach domenowym/prywatnym. Aplikacja jest dostępna pod `http://<IP-komputera>:8282/`. Dane znajdują się w `%ProgramData%\ImageUploader`. Ogranicz dostęp do zaufanej sieci; ten wariant nie konfiguruje HTTPS.
 
-Aby sprawdzić lub zatrzymać zadanie:
+Aby sprawdzić lub sterować usługą:
 
 ```powershell
-Get-ScheduledTask -TaskName ImageUploader
-Stop-ScheduledTask -TaskName ImageUploader
-Start-ScheduledTask -TaskName ImageUploader
+Get-Service -Name ImageUploader
+Stop-Service -Name ImageUploader
+Start-Service -Name ImageUploader
 ```
+
+Wersja Windows jest budowana z obsługą Windows Service; zależność ta nie jest dodawana do buildu Linux. Logi usługi można sprawdzić w Podglądzie zdarzeń Windows, w dzienniku **Aplikacja**.

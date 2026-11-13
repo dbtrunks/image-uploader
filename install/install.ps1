@@ -7,6 +7,7 @@ $repository = "dbtrunks/image-uploader"
 $assetName = "ImageUploader-win-x64.tar.gz"
 $installDirectory = Join-Path $env:ProgramFiles "ImageUploader"
 $dataDirectory = Join-Path $env:ProgramData "ImageUploader"
+$serviceName = "ImageUploader"
 $taskName = "ImageUploader"
 $firewallRuleName = "ImageUploader (TCP 8282)"
 
@@ -51,6 +52,14 @@ try {
         Copy-Item $oldSettingsPath $settingsPath -Force
     }
 
+    $service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+    if ($service -and $service.Status -ne [System.ServiceProcess.ServiceControllerStatus]::Stopped) {
+        Stop-Service -Name $serviceName -Force
+        $service.WaitForStatus(
+            [System.ServiceProcess.ServiceControllerStatus]::Stopped,
+            [TimeSpan]::FromSeconds(30))
+    }
+
     if (Get-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue) {
         Stop-ScheduledTask -TaskName $taskName -ErrorAction SilentlyContinue
         Get-CimInstance Win32_Process -Filter "Name='ImageUploader.exe'" |
@@ -59,6 +68,7 @@ try {
                 Stop-Process -Id $_.ProcessId -Force
                 Wait-Process -Id $_.ProcessId -Timeout 10 -ErrorAction SilentlyContinue
             }
+        Unregister-ScheduledTask -TaskName $taskName -Confirm:$false
     }
 
     $settings = Get-Content $settingsPath -Raw | ConvertFrom-Json
@@ -74,30 +84,33 @@ try {
     New-Item -ItemType Directory -Path $installDirectory, $dataDirectory, (Join-Path $dataDirectory "uploads"), (Join-Path $dataDirectory "images"), (Join-Path $dataDirectory "logs") -Force | Out-Null
     Copy-Item (Join-Path $stagingDirectory "*") $installDirectory -Recurse -Force
 
-    $launcherPath = Join-Path $installDirectory "Start-ImageUploader.ps1"
-    $logPath = Join-Path $dataDirectory "logs\image-uploader.log"
-    $launcherContent = @(
-        '$env:ASPNETCORE_URLS = "http://0.0.0.0:8282"'
-        ('Set-Location "{0}"' -f $installDirectory)
-        ('& "{0}\ImageUploader.exe" >> "{1}" 2>&1' -f $installDirectory, $logPath)
-        'exit $LASTEXITCODE'
-    ) -join [Environment]::NewLine
-    Set-Content -Path $launcherPath -Value $launcherContent -Encoding UTF8
+    $executable = Join-Path $installDirectory "ImageUploader.exe"
+    if (-not $service) {
+        New-Service -Name $serviceName -DisplayName "Image Uploader" `
+            -Description "Image Uploader file upload service." `
+            -BinaryPathName ('"{0}"' -f $executable) `
+            -StartupType Automatic | Out-Null
+    }
 
-    $taskArguments = '-NoProfile -ExecutionPolicy Bypass -File "' + $launcherPath + '"'
-    $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $taskArguments
-    $trigger = New-ScheduledTaskTrigger -AtStartup
-    $taskPrincipal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
-    $settingsTask = New-ScheduledTaskSettingsSet -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit ([TimeSpan]::Zero)
-    Register-ScheduledTask -TaskName $taskName -Action $action -Trigger $trigger -Principal $taskPrincipal -Settings $settingsTask -Force | Out-Null
+    & sc.exe config $serviceName "binPath= `"$executable`"" "start= auto" | Out-Null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Nie udało się skonfigurować usługi Windows $serviceName."
+    }
+
+    $serviceRegistryPath = "HKLM:\SYSTEM\CurrentControlSet\Services\$serviceName"
+    $currentEnvironment = (Get-ItemProperty -Path $serviceRegistryPath -Name Environment -ErrorAction SilentlyContinue).Environment
+    $serviceEnvironment = @($currentEnvironment | Where-Object { $_ -notmatch '^ASPNETCORE_URLS=' })
+    $serviceEnvironment += "ASPNETCORE_URLS=http://0.0.0.0:8282"
+    New-ItemProperty -Path $serviceRegistryPath -Name Environment -PropertyType MultiString `
+        -Value $serviceEnvironment -Force | Out-Null
 
     if (-not (Get-NetFirewallRule -DisplayName $firewallRuleName -ErrorAction SilentlyContinue)) {
         New-NetFirewallRule -DisplayName $firewallRuleName -Direction Inbound -Action Allow -Protocol TCP -LocalPort 8282 -Profile Domain,Private | Out-Null
     }
 
-    Start-ScheduledTask -TaskName $taskName
+    Start-Service -Name $serviceName
     Write-Output 'Instalacja zakonczona. Otworz http://<IP-komputera>:8282/'
-    Write-Output ('Log aplikacji: {0}' -f $logPath)
+    Write-Output ('Service status: Get-Service -Name {0}' -f $serviceName)
 } finally {
     if (Test-Path $temporaryDirectory) {
         Remove-Item $temporaryDirectory -Recurse -Force
